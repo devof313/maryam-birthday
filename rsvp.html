@@ -44,27 +44,16 @@
       <button class="linkish" id="again" type="button">Change my answer</button>
     </div>
 
-    <div class="fallback" id="fallback" hidden>
-      <b>Send your RSVP to the host</b>
-      <p style="margin:6px 0 0">Send this message to the person who invited you:</p>
-      <pre id="fbText"></pre>
-      <div class="fb-actions">
-        <button type="button" id="copyBtn">Copy</button>
-        <a id="waLink" href="https://wa.me/" target="_blank" rel="noopener">WhatsApp</a>
-      </div>
-    </div>
   </section>
 
   <footer>🤫 Reminder: don't tell Maryam</footer>
 </main>
 
 <script src="confetti.js"></script>
-<script src="config.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const ENDPOINT = (window.RSVP_ENDPOINT || '').trim();
-  const LABEL = { yes: 'Coming', maybe: 'Maybe', no: "Can't make it" };
+  const ENDPOINT = 'https://script.google.com/macros/s/AKfycbw6MnMAbDdf6jruMGwHkaVtJ4Lcmu5zrvgLVyByBdWnzFf19L8JbJNxnHW5gT7YQReu/exec';
 
   const read = () => {
     const st = document.querySelector('input[name=status]:checked');
@@ -72,20 +61,7 @@
   };
   const setMsg = (t, cls) => { $('msg').textContent = t; $('msg').className = 'msg ' + (cls || ''); };
 
-  function showFallback(f) {
-    f = f || read();
-    $('fallback').hidden = false;
-    const text = `RSVP for Maryam's surprise birthday (Sun 18 Oct, 4–6 pm, Bait Alreem)\nName: ${f.name || '…'}\nAnswer: ${f.status ? LABEL[f.status] : '…'}${f.note ? `\nMessage: ${f.note}` : ''}\n(I won't tell Maryam 🤫)`;
-    $('fbText').textContent = text;
-    $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(text);
-  }
 
-  $('copyBtn').addEventListener('click', () => {
-    const btn = $('copyBtn');
-    const select = () => { const r = document.createRange(); r.selectNodeContents($('fbText')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected'; };
-    if (navigator.clipboard) navigator.clipboard.writeText($('fbText').textContent).then(() => btn.textContent = 'Copied ✓', select);
-    else select();
-  });
 
   // Remember this guest's last answer on their phone
   try {
@@ -114,7 +90,6 @@
     const f = read();
     if (!f.name) { setMsg('Please add your name so we know who you are.', 'err'); $('name').focus(); return; }
     if (!f.status) { setMsg("Pick an answer: in, maybe, or can't make it.", 'err'); return; }
-    if (!ENDPOINT) { showFallback(f); setMsg('Copy or share the message below to send your RSVP.'); return; }
 
     $('submitBtn').disabled = true; setMsg('Filing with Accounting…');
     try {
@@ -123,8 +98,7 @@
       try { localStorage.setItem('rsvp', JSON.stringify(f)); } catch (e) {}
       setMsg(''); showDone(f);
     } catch (err) {
-      showFallback(f);
-      setMsg("Your RSVP didn't go through. Check your connection, or send the message below instead.", 'err');
+      setMsg("Your RSVP didn't go through. Check your internet connection and tap the button again.", 'err');
     } finally { $('submitBtn').disabled = false; }
   });
 
