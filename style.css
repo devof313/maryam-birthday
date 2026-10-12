@@ -44,7 +44,7 @@ button,a.btn{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent
 /* ---- Envelope ---- */
 .envelope{
   position:relative;background:var(--manila);border:2px solid var(--manila-edge);
-  border-radius:4px;padding:22px 18px 22px 30px;box-shadow:0 14px 30px rgba(0,0,0,.4);
+  border-radius:4px;padding:58px 18px 22px 30px;box-shadow:0 14px 30px rgba(0,0,0,.4);
   font-family:var(--f-type);
 }
 .envelope .holes{position:absolute;left:10px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-around}
