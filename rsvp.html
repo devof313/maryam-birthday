@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2e1747">
+<title>RSVP · Maryam's Secret Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Special+Elite&family=Archivo:wght@400;600;800&family=Caveat:wght@600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<main class="wrap">
+  <a class="back" href="index.html">← Back to the memo</a>
+
+  <section class="sheet reveal">
+    <span class="stamp">Form 18-B</span>
+    <h3>RSVP form 18-B</h3>
+    <p class="sub">Please complete in full. Accounting needs a head count for the cake.</p>
+
+    <form id="form" novalidate>
+      <label class="lbl" for="name">Your name</label>
+      <input type="text" id="name" maxlength="60" autocomplete="name" placeholder="e.g. Pam Beesly">
+
+      <label class="lbl" id="statusLbl">Will you attend?</label>
+      <div class="choices" role="radiogroup" aria-labelledby="statusLbl">
+        <label class="choice"><input type="radio" name="status" value="yes"><span class="box"></span><span><b>I'm in!</b><small>Michael-level excited. I might cry.</small></span></label>
+        <label class="choice"><input type="radio" name="status" value="maybe"><span class="box"></span><span><b>Maybe</b><small>Checking my calendar, Stanley-style.</small></span></label>
+        <label class="choice"><input type="radio" name="status" value="no"><span class="box"></span><span><b>Can't make it</b><small>Sad Toby energy. I'll send love.</small></span></label>
+      </div>
+
+      <label class="lbl" for="note">Message for Maryam (optional)</label>
+      <textarea id="note" maxlength="300" placeholder="A Dundie-worthy birthday wish…"></textarea>
+
+      <button class="submit" id="submitBtn" type="submit">File my RSVP</button>
+      <p class="msg" id="msg" role="status"></p>
+    </form>
+
+    <div class="done" id="done" hidden>
+      <div class="big" id="doneIcon">🎉</div>
+      <h4 id="doneTitle">RSVP filed!</h4>
+      <p id="doneText">See you there. Remember: act casual.</p>
+      <button class="linkish" id="again" type="button">Change my answer</button>
+    </div>
+
+    <div class="fallback" id="fallback" hidden>
+      <b>Send your RSVP to the host</b>
+      <p style="margin:6px 0 0">Send this message to the person who invited you:</p>
+      <pre id="fbText"></pre>
+      <div class="fb-actions">
+        <button type="button" id="copyBtn">Copy</button>
+        <a id="waLink" href="https://wa.me/" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>🤫 Reminder: don't tell Maryam</footer>
+</main>
+
+<script src="confetti.js"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ENDPOINT = (window.RSVP_ENDPOINT || '').trim();
+  const LABEL = { yes: 'Coming', maybe: 'Maybe', no: "Can't make it" };
+
+  const read = () => {
+    const st = document.querySelector('input[name=status]:checked');
+    return { name: $('name').value.trim().slice(0, 60), status: st ? st.value : '', note: $('note').value.trim().slice(0, 300) };
+  };
+  const setMsg = (t, cls) => { $('msg').textContent = t; $('msg').className = 'msg ' + (cls || ''); };
+
+  function showFallback(f) {
+    f = f || read();
+    $('fallback').hidden = false;
+    const text = `RSVP for Maryam's surprise birthday (Sun 18 Oct, 4–6 pm, Bait Alreem)\nName: ${f.name || '…'}\nAnswer: ${f.status ? LABEL[f.status] : '…'}${f.note ? `\nMessage: ${f.note}` : ''}\n(I won't tell Maryam 🤫)`;
+    $('fbText').textContent = text;
+    $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+  }
+
+  $('copyBtn').addEventListener('click', () => {
+    const btn = $('copyBtn');
+    const select = () => { const r = document.createRange(); r.selectNodeContents($('fbText')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected'; };
+    if (navigator.clipboard) navigator.clipboard.writeText($('fbText').textContent).then(() => btn.textContent = 'Copied ✓', select);
+    else select();
+  });
+
+  // Remember this guest's last answer on their phone
+  try {
+    const prev = JSON.parse(localStorage.getItem('rsvp') || 'null');
+    if (prev) {
+      $('name').value = prev.name || ''; $('note').value = prev.note || '';
+      const r = document.querySelector(`input[name=status][value="${prev.status}"]`); if (r) r.checked = true;
+      $('submitBtn').textContent = 'Update my RSVP';
+    }
+  } catch (e) {}
+
+  function showDone(f) {
+    const copy = {
+      yes: ['🎉', 'RSVP filed!', 'See you on Sunday 18 October at 4 pm. Remember: act casual.'],
+      maybe: ['🤔', 'Filed as a maybe', 'Come back and update it when you know.'],
+      no: ['💜', "We'll miss you", 'Thanks for letting us know. Your message will reach Maryam.']
+    }[f.status];
+    [$('doneIcon').textContent, $('doneTitle').textContent, $('doneText').textContent] = copy;
+    $('form').hidden = true; $('done').hidden = false;
+    if (f.status === 'yes') confetti();
+  }
+  $('again').addEventListener('click', () => { $('done').hidden = true; $('form').hidden = false; setMsg(''); $('submitBtn').textContent = 'Update my RSVP'; });
+
+  $('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = read();
+    if (!f.name) { setMsg('Please add your name so we know who you are.', 'err'); $('name').focus(); return; }
+    if (!f.status) { setMsg("Pick an answer: in, maybe, or can't make it.", 'err'); return; }
+    if (!ENDPOINT) { showFallback(f); setMsg('Copy or share the message below to send your RSVP.'); return; }
+
+    $('submitBtn').disabled = true; setMsg('Filing with Accounting…');
+    try {
+      // text/plain keeps this a "simple" request, which Google Apps Script accepts cross-origin
+      await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...f, device: getDeviceId() }) });
+      try { localStorage.setItem('rsvp', JSON.stringify(f)); } catch (e) {}
+      setMsg(''); showDone(f);
+    } catch (err) {
+      showFallback(f);
+      setMsg("Your RSVP didn't go through. Check your connection, or send the message below instead.", 'err');
+    } finally { $('submitBtn').disabled = false; }
+  });
+
+  // Lets the host's sheet replace an earlier answer from the same phone instead of adding a duplicate
+  function getDeviceId() {
+    try {
+      let id = localStorage.getItem('device');
+      if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('device', id); }
+      return id;
+    } catch (e) { return ''; }
+  }
+})();
+</script>
+</body>
+</html>

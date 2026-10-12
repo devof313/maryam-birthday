@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2e1747">
+<title>Maryam's Secret Birthday</title>
+<meta name="description" content="A top-secret memo from the Party Planning Committee. Do not tell Maryam.">
+<meta property="og:title" content="🤫 Top secret memo: Maryam's surprise birthday">
+<meta property="og:description" content="Sunday 18 October · 4–6 pm · Bait Alreem. Do NOT tell Maryam.">
+<meta property="og:image" content="dwight.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Special+Elite&family=Archivo:wght@400;600;800&family=Caveat:wght@600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<main class="wrap">
+
+  <section class="envelope" id="envelope" aria-label="Interoffice envelope">
+    <div class="holes" aria-hidden="true"><i></i><i></i><i></i></div>
+    <span class="stamp">Top secret</span>
+    <div class="route">
+      <b>From</b><span>Party Planning Committee</span>
+      <b>To</b><span>You (and only you)</span>
+      <b>Re</b><span><s>Quarterly sales</s> Something better</span>
+    </div>
+    <figure class="polaroid wiggle">
+      <img src="dwight.webp" alt="Dwight in a yellow Happy Birthday party hat, looking very serious" width="1080" height="1350">
+      <figcaption>Security clearance check</figcaption>
+      <div class="bubble">Identity confirmed. You may open the memo.</div>
+    </figure>
+    <button class="btn-main" id="openBtn" type="button">✉ Open interoffice memo</button>
+  </section>
+
+  <article class="memo" id="memo" hidden>
+    <span class="stamp">Confidential</span>
+    <header class="letterhead">
+      <div class="logo" aria-hidden="true">PPC</div>
+      <div>
+        <h2>Party Planning Committee</h2>
+        <p>Official memo · Do not leave on the printer</p>
+      </div>
+    </header>
+
+    <div class="fields">
+      <b>Memo</b><span>#1018</span>
+      <b>Subject</b><span>Maryam's birthday</span>
+      <b>Priority</b><span>Higher than Pretzel Day</span>
+    </div>
+
+    <h1>Maryam's <em>surprise</em> birthday party</h1>
+    <p class="lede">You are hereby summoned to a mandatory fun meeting. Cake will be served, and nobody has to sit through a fire safety seminar.</p>
+
+    <div class="details">
+      <div class="detail"><span class="ico" aria-hidden="true">📅</span><div><small>Date</small><strong>Sunday, 18 October</strong></div></div>
+      <div class="detail"><span class="ico" aria-hidden="true">🕓</span><div><small>Time</small><strong>4 – 6 pm</strong><span>Come by 3:45 so you can hide</span></div></div>
+      <div class="detail"><span class="ico" aria-hidden="true">📍</span><div><small>Location</small><strong>Bait Alreem</strong><span>The conference room of dreams</span></div></div>
+    </div>
+
+    <div class="countdown" aria-label="Countdown to the party">
+      <div class="cd"><b id="cdD">–</b><small>days</small></div>
+      <div class="cd"><b id="cdH">–</b><small>hrs</small></div>
+      <div class="cd"><b id="cdM">–</b><small>mins</small></div>
+      <div class="cd"><b id="cdS">–</b><small>secs</small></div>
+    </div>
+    <p class="cd-label" id="cdLabel">until we all yell "Surprise!"</p>
+
+    <div class="sticky" role="note">
+      <strong>⚠ It's a secret</strong>
+      Do NOT tell Maryam! No hints, no winks at the camera. Keep it locked up like Dwight's desk drawer until 18 October.
+      <label class="oath"><input type="checkbox" id="oath"> I swear on the Schrute family beet farm to keep this a secret.</label>
+    </div>
+
+    <a class="btn-main" id="toRsvp" href="rsvp.html" aria-disabled="true">Swear the oath to RSVP →</a>
+
+    <div class="talking">
+      <button type="button" id="talkBtn">🎥 Talking head</button>
+      <p class="quote" id="quote">Tap for a word from the office.</p>
+    </div>
+  </article>
+
+  <footer>Party Planning Committee · Memo #1018</footer>
+</main>
+
+<script src="confetti.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const store = {
+    get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  function openMemo(animate) {
+    $('envelope').hidden = true;
+    $('memo').hidden = false;
+    if (animate) { $('memo').classList.add('reveal'); confetti(); scrollTo(0, 0); }
+    store.set('opened', '1');
+  }
+  $('openBtn').addEventListener('click', () => openMemo(true));
+  if (store.get('opened') === '1') openMemo(false);
+
+  // Countdown to 4 pm on 18 Oct 2026, in the guest's local time
+  const party = new Date(2026, 9, 18, 16, 0, 0), end = new Date(2026, 9, 18, 18, 0, 0);
+  function tick() {
+    const now = new Date(), ms = party - now;
+    if (ms <= 0) {
+      ['cdD', 'cdH', 'cdM', 'cdS'].forEach(id => $(id).textContent = '0');
+      $('cdLabel').textContent = now < end ? "It's party time! Shhh… here she comes." : 'Happy birthday, Maryam!';
+      return;
+    }
+    const s = Math.floor(ms / 1000);
+    $('cdD').textContent = Math.floor(s / 86400);
+    $('cdH').textContent = Math.floor(s % 86400 / 3600);
+    $('cdM').textContent = Math.floor(s % 3600 / 60);
+    $('cdS').textContent = s % 60;
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Oath gates the RSVP button
+  const oath = $('oath'), go = $('toRsvp');
+  function syncOath() {
+    go.setAttribute('aria-disabled', String(!oath.checked));
+    go.textContent = oath.checked ? 'Fill in the RSVP form →' : 'Swear the oath to RSVP →';
+  }
+  oath.checked = store.get('oath') === '1'; syncOath();
+  oath.addEventListener('change', () => {
+    store.set('oath', oath.checked ? '1' : '0'); syncOath();
+    if (oath.checked) confetti(60);
+  });
+  go.addEventListener('click', e => {
+    if (!oath.checked) {
+      e.preventDefault();
+      oath.closest('.sticky').animate([{ transform: 'rotate(-1.2deg)' }, { transform: 'rotate(2deg)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(-1.2deg)' }], { duration: 400 });
+    }
+  });
+
+  const quotes = [
+    '“I\'m not superstitious, but I am a little stitious about birthdays.” — Regional Manager of Fun',
+    '“Bears. Beets. Birthday cake.” — someone in a mustard shirt',
+    '“I\'d like to formally request more cake.” — Accounting',
+    '“Surprise parties are like Dundies. Everyone gets one eventually.” — Party Planning Committee',
+    '“I\'ve been practising my act-casual face for three days.” — Reception',
+    '“If anyone tells Maryam, I will know. I always know.” — Assistant to the Party Planner',
+    '“Keep the balloons in the car until she\'s inside.” — Warehouse',
+    '*looks directly into the camera* … we\'re really doing this.'
+  ];
+  let qi = -1;
+  $('talkBtn').addEventListener('click', () => {
+    qi = (qi + 1 + Math.floor(Math.random() * (quotes.length - 1))) % quotes.length;
+    $('quote').textContent = quotes[qi];
+  });
+})();
+</script>
+</body>
+</html>
